@@ -1,670 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>nixre — sovereign code collaboration</title>
-<meta name="description" content="A sovereign, minimalist Git forge. WebAuthn passkeys, zero vendor lock-in, beautiful UI."/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0f1a'/><text x='50' y='68' font-family='monospace' font-size='48' fill='%233b82f6' text-anchor='middle' font-weight='bold'>nx</text></svg>"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..900&family=JetBrains+Mono:ital,wght@0,300..800;1,400&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nixre — a self-hosted Git forge</title>
+<meta name="description" content="Self-host a Git forge with passkeys, spaces, and pull requests. One Docker command. No vendor lock-in.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23111110'/><text x='16' y='22' text-anchor='middle' font-family='Georgia' font-size='16' fill='%23eceae4'>n</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════
-   RESET & TOKENS
-   ═══════════════════════════════════════ */
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#06080e;
-  --bg2:#0a0e17;
-  --surface:#0e1320;
-  --surface2:#131928;
-  --surface3:#1a2236;
-  --border:#1e2a40;
-  --border2:#2a3a55;
-  --text:#eef2f9;
-  --text2:#94a3b8;
-  --text3:#556178;
-  --blue:#3b82f6;
-  --blue2:#2563eb;
-  --cyan:#22d3ee;
-  --violet:#8b5cf6;
-  --green:#34d399;
-  --amber:#fbbf24;
-  --red:#f87171;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
-  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  --ease:cubic-bezier(.16,1,.3,1);
-  --easeBack:cubic-bezier(.34,1.56,.64,1);
+:root {
+  /* Tokens from Akicou/Nixre public/colors.css — dark theme */
+  --bg: #00060f;
+  --bg-raise: #0a1018;
+  --ink: #ffffff;
+  --ink-2: #b8babc;
+  --ink-3: #8f9296;
+  --rule: #1f242c;
+  --rule-strong: #29303a;
+  --accent: #165fcc;
+  --accent-hover: #1c77ff;
+  --accent-ink: #4d94ff;
+  --ok: #73d13d;
+
+  --sans: Inter, Booton, ui-sans-serif, system-ui, sans-serif;
+  --serif: Inter, Booton, ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+
+  --f0: 12px; --f1: 14px; --f2: 16px; --f3: 20px;
+  --f4: 24px; --f5: 30px; --f6: 40px;
+
+  --measure: 40rem;
+  --page: 68rem;
+  --r: 6px;
 }
-html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-img{max-width:100%}
 
-/* ═══════════════════════════════════════
-   SCROLL REVEAL
-   ═══════════════════════════════════════ */
-.rv{opacity:0;transform:translateY(36px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.rv.vis{opacity:1;transform:none}
-.rv-l{opacity:0;transform:translateX(-40px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.rv-l.vis{opacity:1;transform:none}
-.rv-r{opacity:0;transform:translateX(40px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.rv-r.vis{opacity:1;transform:none}
-.rv-s{opacity:0;transform:scale(.93);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.rv-s.vis{opacity:1;transform:none}
-.d1{transition-delay:.07s}.d2{transition-delay:.14s}.d3{transition-delay:.21s}.d4{transition-delay:.28s}.d5{transition-delay:.35s}.d6{transition-delay:.42s}
-
-/* ═══════════════════════════════════════
-   KEYFRAMES
-   ═══════════════════════════════════════ */
-@keyframes heroIn{from{opacity:0;transform:translateY(48px) scale(.97)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,15px) scale(.97)}}
-@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-25px,20px) scale(1.08)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
-@keyframes pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes gridPulse{0%,100%{opacity:.03}50%{opacity:.07}}
-@keyframes glowLine{0%{transform:scaleX(0);opacity:0}50%{opacity:1}100%{transform:scaleX(1);opacity:0}}
-
-/* ═══════════════════════════════════════
-   NAV
-   ═══════════════════════════════════════ */
-nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:60px;display:flex;align-items:center;transition:all .35s var(--ease)}
-nav.scrolled{background:rgba(6,8,14,.82);backdrop-filter:blur(20px) saturate(1.4);border-bottom:1px solid rgba(30,42,64,.6)}
-.nav-inner{max-width:1200px;width:100%;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.03em}
-.nav-logo .sigil{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 12px rgba(59,130,246,.35);transition:transform .25s var(--easeBack),box-shadow .25s}
-.nav-logo:hover .sigil{transform:rotate(-6deg) scale(1.08);box-shadow:0 4px 20px rgba(59,130,246,.5)}
-.nav-links{display:flex;align-items:center;gap:2px}
-.nav-links a{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s}
-.nav-links a:hover{color:var(--text);background:var(--surface2)}
-.nav-cta{margin-left:10px;padding:7px 18px!important;border-radius:8px!important;font-size:13px!important;font-weight:600!important;background:linear-gradient(135deg,var(--blue2),var(--blue))!important;color:#fff!important;box-shadow:0 2px 12px rgba(59,130,246,.3);transition:all .25s var(--easeBack)!important}
-.nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.45)!important;background:linear-gradient(135deg,var(--blue),var(--blue2))!important}
-
-/* ═══════════════════════════════════════
-   HERO
-   ═══════════════════════════════════════ */
-.hero{position:relative;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 28px 60px;overflow:hidden}
-.hero-orbs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(80px)}
-.orb-1{width:500px;height:500px;top:-15%;right:-8%;background:radial-gradient(circle,rgba(59,130,246,.13),transparent 70%);animation:orbFloat 14s ease-in-out infinite}
-.orb-2{width:400px;height:400px;bottom:-10%;left:-6%;background:radial-gradient(circle,rgba(139,92,246,.1),transparent 70%);animation:orbFloat2 18s ease-in-out infinite}
-.orb-3{width:300px;height:300px;top:30%;left:50%;margin-left:-150px;background:radial-gradient(circle,rgba(34,211,238,.07),transparent 70%);animation:orbFloat 22s ease-in-out infinite reverse}
-.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 70% 60% at 50% 45%,black,transparent);animation:gridPulse 8s ease-in-out infinite}
-.hero-content{position:relative;z-index:2;max-width:860px}
-.hero-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 16px 6px 8px;border-radius:999px;border:1px solid var(--border);background:rgba(14,19,32,.7);backdrop-filter:blur(8px);font-size:12px;font-weight:500;color:var(--text2);margin-bottom:32px;animation:heroIn .7s var(--ease) .1s both}
-.hero-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
-.hero-pill .sep{width:1px;height:14px;background:var(--border2);margin:0 2px}
-.hero-pill code{font-family:var(--mono);font-size:11px;color:var(--cyan)}
-.hero h1{font-size:clamp(2.8rem,7vw,5rem);font-weight:900;line-height:1.02;letter-spacing:-.045em;margin-bottom:24px;animation:heroIn .8s var(--ease) .2s both}
-.hero h1 .grad{background:linear-gradient(135deg,var(--blue) 0%,var(--cyan) 50%,var(--violet) 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradShift 6s ease infinite}
-.hero-sub{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--text2);line-height:1.7;max-width:600px;margin:0 auto 40px;animation:heroIn .8s var(--ease) .35s both}
-.hero-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;animation:heroIn .8s var(--ease) .5s both}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:600;transition:all .25s var(--easeBack);position:relative;overflow:hidden}
-.btn-primary{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;box-shadow:0 4px 24px rgba(59,130,246,.35),inset 0 1px 0 rgba(255,255,255,.12)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(59,130,246,.5),inset 0 1px 0 rgba(255,255,255,.15)}
-.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);transition:none}
-.btn-primary:hover::after{animation:shimmer .8s ease}
-.btn-ghost{border:1px solid var(--border2);color:var(--text2);background:rgba(14,19,32,.5);backdrop-filter:blur(4px)}
-.btn-ghost:hover{color:var(--text);border-color:var(--text3);background:var(--surface2);transform:translateY(-1px)}
-.btn .arr{transition:transform .25s var(--easeBack)}
-.btn:hover .arr{transform:translateX(3px)}
-.hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:11px;letter-spacing:.1em;text-transform:uppercase;animation:fadeUp 1s var(--ease) 1.2s both}
-.hero-scroll .mouse{width:22px;height:34px;border:2px solid var(--text3);border-radius:12px;position:relative}
-.hero-scroll .mouse::after{content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);width:3px;height:8px;border-radius:2px;background:var(--text3);animation:fadeUp 1.5s ease infinite}
-
-/* ═══════════════════════════════════════
-   PRODUCT MOCKUP
-   ═══════════════════════════════════════ */
-.mockup-section{position:relative;padding:0 28px 100px;margin-top:-40px}
-.mockup-wrap{max-width:1060px;margin:0 auto;position:relative;z-index:2}
-.mockup-glow{position:absolute;inset:-40px;background:radial-gradient(ellipse at 50% 30%,rgba(59,130,246,.08),transparent 70%);pointer-events:none}
-.browser{border-radius:14px;border:1px solid var(--border2);background:var(--surface);overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03) inset}
-.browser-bar{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border)}
-.browser-dots{display:flex;gap:7px}
-.browser-dots span{width:11px;height:11px;border-radius:50%}
-.browser-dots .r{background:#ff5f57}.browser-dots .y{background:#febc2e}.browser-dots .g{background:#28c840}
-.browser-url{flex:1;max-width:420px;margin:0 auto;padding:5px 14px;border-radius:7px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
-.browser-url .lock{color:var(--green);font-size:10px}
-.browser-url .domain{color:var(--text2)}
-.browser-body{display:flex;height:480px;overflow:hidden}
-
-/* Mock app sidebar */
-.mock-side{width:220px;border-right:1px solid var(--border);background:var(--bg2);padding:16px 0;flex-shrink:0;display:flex;flex-direction:column}
-.mock-side .ms-logo{display:flex;align-items:center;gap:8px;padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px}
-.mock-side .ms-logo .sigil{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--violet));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:800;color:#fff}
-.mock-side .ms-logo span{font-weight:700;font-size:13px;letter-spacing:-.02em}
-.mock-nav{padding:0 8px}
-.mock-nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;font-size:12.5px;color:var(--text3);transition:all .2s;margin-bottom:2px}
-.mock-nav-item.active{background:var(--surface2);color:var(--text)}
-.mock-nav-item .mi{width:16px;height:16px;border-radius:4px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:9px}
-.mock-nav-item.active .mi{background:rgba(59,130,246,.15);color:var(--blue)}
-.mock-side .ms-spaces{margin-top:auto;padding:12px 16px 0;border-top:1px solid var(--border)}
-.mock-side .ms-spaces .label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;font-weight:600}
-.mock-space{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:12px;color:var(--text2);margin-bottom:2px}
-.mock-space .avatar{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,var(--blue2),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff}
-
-/* Mock main area */
-.mock-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.mock-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border)}
-.mock-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
-.mock-breadcrumb .sep{color:var(--text3);font-weight:400}
-.mock-breadcrumb .repo{color:var(--blue)}
-.mock-topbar-actions{display:flex;gap:8px}
-.mock-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);color:var(--text2);background:var(--surface2)}
-.mock-btn.primary{background:var(--blue2);border-color:var(--blue2);color:#fff}
-.mock-content{flex:1;display:flex;overflow:hidden}
-.mock-files{width:260px;border-right:1px solid var(--border);padding:12px 0;overflow:hidden}
-.mock-file{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:12px;color:var(--text2);font-family:var(--mono)}
-.mock-file .fi{width:14px;text-align:center;font-size:11px}
-.mock-file.dir{color:var(--text);font-weight:500}
-.mock-file.active{background:rgba(59,130,246,.08);color:var(--blue)}
-.mock-editor{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.mock-editor-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px}
-.mock-tab{padding:8px 14px;font-size:11px;font-family:var(--mono);color:var(--text3);border-bottom:2px solid transparent}
-.mock-tab.active{color:var(--text);border-bottom-color:var(--blue)}
-.mock-code{flex:1;padding:16px 20px;font-family:var(--mono);font-size:12px;line-height:1.9;overflow:hidden}
-.mock-code .ln{display:flex;gap:16px}
-.mock-code .ln-num{color:var(--text3);min-width:24px;text-align:right;user-select:none;opacity:.5}
-.mock-code .kw{color:var(--violet)}
-.mock-code .fn{color:var(--blue)}
-.mock-code .str{color:var(--green)}
-.mock-code .cm{color:var(--text3);font-style:italic}
-.mock-code .op{color:var(--cyan)}
-.mock-code .var{color:var(--amber)}
-
-/* ═══════════════════════════════════════
-   MARQUEE
-   ═══════════════════════════════════════ */
-.marquee-section{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 0;overflow:hidden;background:var(--bg2)}
-.marquee-track{display:flex;width:max-content;animation:marquee 30s linear infinite}
-.marquee-track:hover{animation-play-state:paused}
-.marquee-item{display:flex;align-items:center;gap:8px;padding:0 32px;font-family:var(--mono);font-size:12px;color:var(--text3);white-space:nowrap}
-.marquee-item .mi-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);opacity:.5}
-
-/* ═══════════════════════════════════════
-   SECTIONS
-   ═══════════════════════════════════════ */
-.section{max-width:1100px;margin:0 auto;padding:110px 28px}
-.section-head{max-width:640px;margin-bottom:56px}
-.section-label{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--blue);margin-bottom:16px}
-.section-label::before{content:'';width:20px;height:1px;background:var(--blue)}
-.section h2{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:800;line-height:1.1;letter-spacing:-.035em;margin-bottom:14px}
-.section .sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:520px}
-
-/* ═══════════════════════════════════════
-   FEATURES
-   ═══════════════════════════════════════ */
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
-.feat-cell{background:var(--surface);padding:36px 30px;transition:background .3s}
-.feat-cell:hover{background:var(--surface2)}
-.feat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:18px;position:relative}
-.feat-icon::after{content:'';position:absolute;inset:0;border-radius:10px;background:inherit;filter:blur(12px);opacity:.3;z-index:-1}
-.fi-blue{background:rgba(59,130,246,.12);color:var(--blue)}
-.fi-cyan{background:rgba(34,211,238,.12);color:var(--cyan)}
-.fi-violet{background:rgba(139,92,246,.12);color:var(--violet)}
-.fi-green{background:rgba(52,211,153,.12);color:var(--green)}
-.fi-amber{background:rgba(251,191,36,.12);color:var(--amber)}
-.fi-red{background:rgba(248,113,113,.12);color:var(--red)}
-.feat-cell h3{font-size:15px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
-.feat-cell p{font-size:13px;color:var(--text2);line-height:1.65}
-.feat-cell .tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;background:var(--surface3);color:var(--text3);border:1px solid var(--border)}
-
-/* ═══════════════════════════════════════
-   AI / LLMS SECTION
-   ═══════════════════════════════════════ */
-.ai-section{position:relative;overflow:hidden}
-.ai-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(139,92,246,.06),transparent);pointer-events:none}
-.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.ai-visual{position:relative}
-.ai-terminal{border-radius:12px;border:1px solid var(--border2);background:var(--surface);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.ai-terminal .at-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3)}
-.ai-terminal .at-body{padding:20px;font-family:var(--mono);font-size:12.5px;line-height:2;color:var(--text2)}
-.ai-terminal .at-body .prompt{color:var(--violet)}
-.ai-terminal .at-body .cmd{color:var(--text)}
-.ai-terminal .at-body .ok{color:var(--green)}
-.ai-terminal .at-body .info{color:var(--cyan)}
-.ai-terminal .at-body .dim{color:var(--text3)}
-.ai-badge{position:absolute;top:-14px;right:-14px;padding:6px 14px;border-radius:8px;background:linear-gradient(135deg,var(--violet),var(--blue));font-size:11px;font-weight:700;color:#fff;box-shadow:0 4px 16px rgba(139,92,246,.4);animation:orbFloat 8s ease-in-out infinite}
-
-/* ═══════════════════════════════════════
-   DEPLOY
-   ═══════════════════════════════════════ */
-.deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
-.deploy-steps{display:flex;flex-direction:column;gap:0}
-.deploy-step{display:flex;gap:18px;padding:24px 0;position:relative}
-.deploy-step::before{content:'';position:absolute;left:17px;top:56px;bottom:-24px;width:1px;background:var(--border)}
-.deploy-step:last-child::before{display:none}
-.step-num{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0;position:relative;z-index:1}
-.step-content h4{font-size:14px;font-weight:700;margin-bottom:4px}
-.step-content p{font-size:13px;color:var(--text2);line-height:1.6}
-.step-content code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px;border:1px solid var(--border);color:var(--cyan)}
-.deploy-code{border-radius:12px;border:1px solid var(--border2);background:var(--surface);overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.35)}
-.deploy-code .dc-bar{display:flex;align-items:center;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3)}
-.deploy-code .dc-body{padding:20px;font-family:var(--mono);font-size:12.5px;line-height:2;color:var(--text2);overflow-x:auto}
-.deploy-code .dc-body .sh{color:var(--blue)}
-.deploy-code .dc-body .cmd{color:var(--text)}
-.deploy-code .dc-body .cm{color:var(--text3)}
-.deploy-code .dc-body .str{color:var(--green)}
-.deploy-code .dc-body .key{color:var(--violet)}
-
-/* ═══════════════════════════════════════
-   CTA
-   ═══════════════════════════════════════ */
-.cta-section{text-align:center;position:relative;overflow:hidden}
-.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 50% 100%,rgba(59,130,246,.08),transparent);pointer-events:none}
-.cta-section h2{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:18px}
-.cta-section .sub{font-size:16px;color:var(--text2);max-width:480px;margin:0 auto 36px;line-height:1.7}
-.cta-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-
-/* ═══════════════════════════════════════
-   FOOTER
-   ═══════════════════════════════════════ */
-footer{border-top:1px solid var(--border);padding:48px 28px;background:var(--bg2)}
-.footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
-.footer-brand{display:flex;align-items:center;gap:10px}
-.footer-brand .sigil{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--violet));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:800;color:#fff}
-.footer-brand span{font-weight:700;font-size:14px}
-.footer-links{display:flex;gap:24px}
-.footer-links a{font-size:13px;color:var(--text3);transition:color .2s}
-.footer-links a:hover{color:var(--text)}
-.footer-copy{font-size:12px;color:var(--text3);font-family:var(--mono)}
-
-/* ═══════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════ */
-@media(max-width:900px){
-  .feat-grid{grid-template-columns:repeat(2,1fr)}
-  .ai-grid,.deploy-grid{grid-template-columns:1fr}
-  .browser-body{height:380px}
-  .mock-side{width:180px}
-  .mock-files{width:200px}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-@media(max-width:640px){
-  .feat-grid{grid-template-columns:1fr}
-  .nav-links a:not(.nav-cta){display:none}
-  .browser-body{height:320px}
-  .mock-side{display:none}
-  .mock-files{display:none}
-  .hero h1{font-size:2.4rem}
-  .hero-actions{flex-direction:column;width:100%}
-  .hero-actions .btn{width:100%;justify-content:center}
-  .footer-inner{flex-direction:column;text-align:center}
+
+body {
+  font-family: var(--sans);
+  font-size: var(--f2);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+img { max-width: 100%; }
+
+.wrap {
+  width: min(var(--page), calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* ——— nav ——— */
+header {
+  border-bottom: 1px solid var(--rule);
+}
+.nav {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s5);
+  padding-block: var(--s4);
+}
+.wordmark {
+  font-family: var(--serif);
+  font-size: var(--f3);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.wordmark span { color: var(--ink-3); font-weight: 400; }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  list-style: none;
+  font-size: var(--f1);
+  color: var(--ink-2);
+}
+.nav-links a {
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.nav-links a:hover,
+.nav-links a:focus-visible {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  outline: none;
+}
+.nav-links .primary {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.nav-links .primary:hover { border-bottom-color: var(--ink); }
+
+/* ——— hero ——— */
+.hero {
+  padding-block: var(--s9) var(--s8);
+  max-width: var(--measure);
+}
+.kicker {
+  font-family: var(--mono);
+  font-size: var(--f0);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--s4);
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 5vw, var(--f6));
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--s5);
+}
+.lede {
+  font-size: var(--f3);
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin-bottom: var(--s6);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s4) var(--s5);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-family: var(--sans);
+  font-size: var(--f1);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: var(--r);
+  border: 1px solid transparent;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn-solid {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-solid:hover { background: var(--accent-hover); }
+.btn-text {
+  padding-inline: 0;
+  color: var(--ink-2);
+  border-radius: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.btn-text:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ——— sections ——— */
+section {
+  padding-block: var(--s8);
+  border-top: 1px solid var(--rule);
+}
+.section-head {
+  max-width: var(--measure);
+  margin-bottom: var(--s6);
+}
+.section-head h2 {
+  font-family: var(--serif);
+  font-size: var(--f5);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: var(--s3);
+}
+.section-head p {
+  color: var(--ink-2);
+  max-width: 36rem;
+}
+
+/* ——— split intro ——— */
+.cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s6);
+}
+@media (min-width: 800px) {
+  .cols-2 { grid-template-columns: 1fr 1fr; gap: var(--s8); }
+}
+.prose p + p { margin-top: var(--s4); }
+.prose p { color: var(--ink-2); max-width: 36rem; }
+.prose strong { color: var(--ink); font-weight: 500; }
+
+/* ——— feature list (not cards) ——— */
+.defs {
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.defs li {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s2);
+  padding-block: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+@media (min-width: 720px) {
+  .defs li {
+    grid-template-columns: 14rem 1fr;
+    gap: var(--s6);
+    align-items: baseline;
+  }
+}
+.defs dt {
+  font-weight: 500;
+  font-size: var(--f2);
+}
+.defs dd { color: var(--ink-2); }
+
+/* ——— code ——— */
+pre, code { font-family: var(--mono); }
+code.inline {
+  font-size: 0.9em;
+  color: var(--accent-ink);
+}
+pre {
+  background: var(--bg-raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  padding: var(--s5);
+  overflow-x: auto;
+  font-size: var(--f1);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+pre .c { color: var(--ink-3); }
+pre .p { color: var(--accent); }
+pre .ok { color: var(--ok); }
+
+.install {
+  display: grid;
+  gap: var(--s6);
+}
+@media (min-width: 880px) {
+  .install { grid-template-columns: 18rem 1fr; align-items: start; }
+}
+.steps { list-style: none; }
+.steps li { padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+.steps li:first-child { border-top: 1px solid var(--rule); }
+.steps h3 {
+  font-size: var(--f2);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.steps p { color: var(--ink-2); font-size: var(--f1); }
+
+/* ——— agent note ——— */
+.note {
+  max-width: var(--measure);
+}
+.note a {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+.note a:hover { color: var(--ink); }
+
+/* ——— footer ——— */
+footer {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--s6);
+  color: var(--ink-3);
+  font-size: var(--f1);
+}
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+.foot nav { display: flex; gap: var(--s5); }
+.foot a { text-decoration: none; color: var(--ink-2); }
+.foot a:hover { color: var(--ink); }
+
+@media (max-width: 560px) {
+  .wrap { width: min(var(--page), calc(100% - 32px)); }
+  .nav-links { gap: var(--s4); }
+  .hero { padding-block: var(--s8) var(--s7); }
 }
 </style>
 </head>
 <body>
 
-<!-- ═══ NAV ═══ -->
-<nav id="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="sigil">nx</div>
-      <span>nixre</span>
-    </a>
-    <div class="nav-links">
-      <a href="https://github.com/Akicou/Nixre" target="_blank" rel="noopener">Source</a>
-      <a href="https://git.nayhein.com" target="_blank" rel="noopener">Forge</a>
-      <a href="/llms.txt">llms.txt</a>
-      <a href="https://git.nayhein.com" target="_blank" class="nav-cta">Launch →</a>
-    </div>
+<header>
+  <div class="wrap nav">
+    <a class="wordmark" href="/">nixre <span>/ forge</span></a>
+    <ul class="nav-links">
+      <li><a href="https://github.com/Akicou/Nixre">Source</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+      <li><a class="primary" href="https://git.nayhein.com">Live instance</a></li>
+    </ul>
   </div>
-</nav>
+</header>
 
-<!-- ═══ HERO ═══ -->
-<section class="hero">
-  <div class="hero-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
-  <div class="hero-grid"></div>
-
-  <div class="hero-content">
-    <div class="hero-pill">
-      <span class="dot"></span>
-      <span>Open Source</span>
-      <span class="sep"></span>
-      <span>Self-Hosted</span>
-      <span class="sep"></span>
-      <code>v1.0</code>
-    </div>
-
-    <h1>
-      Code collaboration<br>
-      without the <span class="grad">noise</span>.
-    </h1>
-
-    <p class="hero-sub">
-      A sovereign Git forge with the aesthetic clarity of Radicle, the workflow familiarity of GitHub, and zero vendor lock-in. Passkey-native. Beautifully minimal.
-    </p>
-
-    <div class="hero-actions">
-      <a href="https://git.nayhein.com" target="_blank" class="btn btn-primary">
-        Open the Forge <span class="arr">→</span>
-      </a>
-      <a href="https://github.com/Akicou/Nixre" target="_blank" class="btn btn-ghost">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        Star on GitHub
-      </a>
-    </div>
-  </div>
-
-  <div class="hero-scroll">
-    <div class="mouse"></div>
-    <span>Scroll</span>
-  </div>
-</section>
-
-<!-- ═══ PRODUCT MOCKUP ═══ -->
-<section class="mockup-section">
-  <div class="mockup-wrap rv-s">
-    <div class="mockup-glow"></div>
-    <div class="browser">
-      <div class="browser-bar">
-        <div class="browser-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
-        <div class="browser-url">
-          <span class="lock">🔒</span>
-          <span class="domain">git.nayhein.com</span>
-          <span>/Nayhein/nixre</span>
-        </div>
-        <div style="width:60px"></div>
-      </div>
-      <div class="browser-body">
-        <div class="mock-side">
-          <div class="ms-logo">
-            <div class="sigil">nx</div>
-            <span>nixre</span>
-          </div>
-          <div class="mock-nav">
-            <div class="mock-nav-item active"><div class="mi">📁</div> Repositories</div>
-            <div class="mock-nav-item"><div class="mi">🔀</div> Pull Requests</div>
-            <div class="mock-nav-item"><div class="mi">⚙️</div> Settings</div>
-            <div class="mock-nav-item"><div class="mi">🔑</div> Passkeys</div>
-          </div>
-          <div class="ms-spaces">
-            <div class="label">Spaces</div>
-            <div class="mock-space"><div class="avatar">N</div> Nayhein</div>
-            <div class="mock-space"><div class="avatar" style="background:linear-gradient(135deg,var(--violet),var(--red))">P</div> Personal</div>
-          </div>
-        </div>
-        <div class="mock-main">
-          <div class="mock-topbar">
-            <div class="mock-breadcrumb">
-              <span>Nayhein</span><span class="sep">/</span><span class="repo">nixre</span>
-            </div>
-            <div class="mock-topbar-actions">
-              <div class="mock-btn">Clone</div>
-              <div class="mock-btn primary">+ New PR</div>
-            </div>
-          </div>
-          <div class="mock-content">
-            <div class="mock-files">
-              <div class="mock-file dir"><span class="fi">📂</span> src</div>
-              <div class="mock-file dir"><span class="fi">📂</span> ui</div>
-              <div class="mock-file dir"><span class="fi">📂</span> docs</div>
-              <div class="mock-file"><span class="fi">📄</span> docker-compose.yml</div>
-              <div class="mock-file active"><span class="fi">📄</span> Caddyfile</div>
-              <div class="mock-file"><span class="fi">📄</span> llms.txt</div>
-              <div class="mock-file"><span class="fi">📄</span> README.md</div>
-              <div class="mock-file"><span class="fi">📄</span> LICENSE</div>
-            </div>
-            <div class="mock-editor">
-              <div class="mock-editor-tabs">
-                <div class="mock-tab active">Caddyfile</div>
-                <div class="mock-tab">docker-compose.yml</div>
-              </div>
-              <div class="mock-code">
-                <div class="ln"><span class="ln-num">1</span><span class="cm"># Nixre reverse proxy — automatic HTTPS</span></div>
-                <div class="ln"><span class="ln-num">2</span><span class="fn">git</span>.<span class="var">nayhein</span>.<span class="var">com</span> {</div>
-                <div class="ln"><span class="ln-num">3</span>&nbsp;&nbsp;<span class="kw">handle</span> <span class="str">/api/*</span> {</div>
-                <div class="ln"><span class="ln-num">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">reverse_proxy</span> <span class="var">127.0.0.1</span>:<span class="op">3001</span></div>
-                <div class="ln"><span class="ln-num">5</span>&nbsp;&nbsp;}</div>
-                <div class="ln"><span class="ln-num">6</span>&nbsp;&nbsp;<span class="kw">handle</span> {</div>
-                <div class="ln"><span class="ln-num">7</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">root</span> * <span class="str">/opt/nixre/ui/dist</span></div>
-                <div class="ln"><span class="ln-num">8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">file_server</span></div>
-                <div class="ln"><span class="ln-num">9</span>&nbsp;&nbsp;}</div>
-                <div class="ln"><span class="ln-num">10</span>}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ MARQUEE ═══ -->
-<div class="marquee-section">
-  <div class="marquee-track">
-    <div class="marquee-item"><span class="mi-dot"></span>WebAuthn / Passkeys</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Zero Vendor Lock-in</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Docker Compose</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Automatic HTTPS</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Radicle Design System</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Pull Requests</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Multi-Tenant Spaces</div>
-    <div class="marquee-item"><span class="mi-dot"></span>llms.txt Standard</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Auth Lock Controls</div>
-    <div class="marquee-item"><span class="mi-dot"></span>MIT License</div>
-    <!-- duplicate for seamless loop -->
-    <div class="marquee-item"><span class="mi-dot"></span>WebAuthn / Passkeys</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Zero Vendor Lock-in</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Docker Compose</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Automatic HTTPS</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Radicle Design System</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Pull Requests</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Multi-Tenant Spaces</div>
-    <div class="marquee-item"><span class="mi-dot"></span>llms.txt Standard</div>
-    <div class="marquee-item"><span class="mi-dot"></span>Auth Lock Controls</div>
-    <div class="marquee-item"><span class="mi-dot"></span>MIT License</div>
-  </div>
-</div>
-
-<!-- ═══ FEATURES ═══ -->
-<section class="section" id="features">
-  <div class="section-head rv">
-    <div class="section-label">Capabilities</div>
-    <h2>Everything you need.<br>Nothing you don't.</h2>
-    <p class="sub">No enterprise upsells. No tracking pixels. No bloated card layouts. Just clean primitives that stay out of your way.</p>
-  </div>
-
-  <div class="feat-grid">
-    <div class="feat-cell rv d1">
-      <div class="feat-icon fi-blue">🔑</div>
-      <h3>Passkey-Native Auth</h3>
-      <p>Touch ID, Face ID, Windows Hello, YubiKey. FIDO2-first with password-optional sign-in. One tap and you're in.</p>
-      <span class="tag">WebAuthn / FIDO2</span>
-    </div>
-    <div class="feat-cell rv d2">
-      <div class="feat-icon fi-red">🔒</div>
-      <h3>Auth Lock</h3>
-      <p>One toggle in the admin console blocks all public registrations. Run a private, invite-only forge instantly.</p>
-      <span class="tag">Admin Console</span>
-    </div>
-    <div class="feat-cell rv d3">
-      <div class="feat-icon fi-violet">🎨</div>
-      <h3>Radicle Design System</h3>
-      <p>Booton typography, JetBrains Mono for code, dark-first palette. Flat, readable, and fast. No cards, no clutter.</p>
-      <span class="tag">Decard Layout</span>
-    </div>
-    <div class="feat-cell rv d4">
-      <div class="feat-icon fi-cyan">🔄</div>
-      <h3>Pull Requests & Diff</h3>
-      <p>Side-by-side code review, commit timelines, inline comments, branch comparison, and one-click merge.</p>
-      <span class="tag">Code Review</span>
-    </div>
-    <div class="feat-cell rv d5">
-      <div class="feat-icon fi-green">📁</div>
-      <h3>Spaces & Organizations</h3>
-      <p>Multi-tenant workspace hierarchy with granular member roles. Organize teams and repos without friction.</p>
-      <span class="tag">Multi-Tenant</span>
-    </div>
-    <div class="feat-cell rv d6">
-      <div class="feat-icon fi-amber">⚡</div>
-      <h3>One-Command Deploy</h3>
-      <p><code style="font-family:var(--mono);font-size:11px;color:var(--cyan)">docker compose up -d</code> — automatic HTTPS via Caddy, embedded SQLite, zero config required.</p>
-      <span class="tag">Docker + Caddy</span>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ AI / LLMS ═══ -->
-<section class="section ai-section" id="ai">
-  <div class="ai-grid">
-    <div class="rv-l">
-      <div class="section-label">Agent-Ready</div>
-      <h2>Built for autonomous<br>DevOps agents.</h2>
-      <p class="sub" style="margin-bottom:24px">
-        Nixre ships with <code style="font-family:var(--mono);font-size:13px;color:var(--cyan);background:var(--surface2);padding:2px 8px;border-radius:5px;border:1px solid var(--border)">llms.txt</code> — a standardized knowledge base that lets AI coding agents autonomously deploy the stack, configure custom domains, provision SSL certificates, and diagnose router port forwarding.
+<main>
+  <div class="wrap">
+    <section class="hero" style="border-top:0;padding-top:var(--s9)">
+      <p class="kicker">Self-hosted Git</p>
+      <h1>A Git forge you run yourself. Passkeys, spaces, pull requests.</h1>
+      <p class="lede">
+        Nixre is a small Git server with a readable UI. Clone over HTTPS,
+        review diffs, lock public signups. No vendor account.
       </p>
-      <p class="sub">
-        Works with Claude, GPT, Cursor, Windsurf, Pi, and any agent that reads structured documentation.
-      </p>
-      <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap">
-        <a href="/llms.txt" class="btn btn-ghost" style="font-size:13px;padding:10px 20px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-          Read llms.txt
-        </a>
-        <a href="https://github.com/Akicou/Nixre" target="_blank" class="btn btn-ghost" style="font-size:13px;padding:10px 20px">
-          View Source →
-        </a>
+      <div class="actions">
+        <a class="btn btn-solid" href="https://git.nayhein.com">Open the live instance</a>
+        <a class="btn btn-text" href="#install">Install it yourself</a>
       </div>
-    </div>
+    </section>
 
-    <div class="ai-visual rv-r">
-      <div class="ai-badge">🤖 Agent Mode</div>
-      <div class="ai-terminal">
-        <div class="at-bar">
-          <span style="color:var(--violet)">●</span> nixre-agent — deploying to git.example.com
+    <section>
+      <div class="cols cols-2">
+        <div class="section-head" style="margin:0">
+          <h2>What it is</h2>
         </div>
-        <div class="at-body">
-          <span class="prompt">agent&gt;</span> <span class="cmd">Reading llms.txt for deployment guide...</span><br>
-          <span class="ok">✓</span> <span class="dim">Docker stack started</span><br>
-          <span class="ok">✓</span> <span class="dim">DNS A record configured</span><br>
-          <span class="ok">✓</span> <span class="dim">Caddy reverse proxy active</span><br>
-          <span class="ok">✓</span> <span class="dim">Let's Encrypt SSL issued</span><br>
-          <span class="ok">✓</span> <span class="dim">Router ports 80/443 forwarded</span><br>
-          <span class="info">→</span> <span class="cmd">https://git.example.com is live</span><span style="animation:blink 1s step-end infinite;color:var(--violet)">▊</span>
+        <div class="prose">
+          <p>
+            Most hosted forges trade convenience for lock-in. Nixre is the
+            opposite: one container, your disk, your domain.
+          </p>
+          <p>
+            The UI is a React app in front of a Gitness-compatible API.
+            Auth is password or WebAuthn. An admin toggle closes registration
+            so the instance stays invite-only.
+          </p>
+          <p>
+            A public instance runs at
+            <strong>git.nayhein.com</strong>.
+            The source is at
+            <a href="https://github.com/Akicou/Nixre" style="color:var(--accent-ink)">github.com/Akicou/Nixre</a>.
+          </p>
         </div>
       </div>
-    </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>What you get</h2>
+        <p>The parts people actually use. Nothing else is advertised.</p>
+      </div>
+      <dl class="defs">
+        <div>
+          <dt>Git over HTTPS</dt>
+          <dd>Standard <code class="inline">git clone</code> and <code class="inline">git push</code>. Smart HTTP, automatic TLS when you put Caddy in front.</dd>
+        </div>
+        <div>
+          <dt>Spaces</dt>
+          <dd>Organizations that hold repositories and members. Roles go from owner down to viewer.</dd>
+        </div>
+        <div>
+          <dt>Pull requests</dt>
+          <dd>Branch compare, side-by-side diff, commit list, merge. The usual review loop.</dd>
+        </div>
+        <div>
+          <dt>Passkeys</dt>
+          <dd>WebAuthn / FIDO2. Touch ID, Face ID, Windows Hello, or a hardware key. Password still works.</dd>
+        </div>
+        <div>
+          <dt>Registration lock</dt>
+          <dd>An admin switch that returns 403 on signup. Use it when the forge should stay private.</dd>
+        </div>
+        <div>
+          <dt>Agent notes</dt>
+          <dd>A machine-readable <a href="/llms.txt" style="color:var(--accent-ink)">llms.txt</a> covers deploy, DNS, Caddy, and home-router port forwarding.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="install">
+      <div class="section-head">
+        <h2>Install</h2>
+        <p>Docker is the only dependency. Domain and TLS are optional on day one.</p>
+      </div>
+      <div class="install">
+        <ol class="steps">
+          <li>
+            <h3>1. Clone</h3>
+            <p>Get the repo onto the machine that will host it.</p>
+          </li>
+          <li>
+            <h3>2. Start</h3>
+            <p><code class="inline">docker compose up -d</code> brings up the API and the UI.</p>
+          </li>
+          <li>
+            <h3>3. Open it</h3>
+            <p>Visit <code class="inline">http://localhost:3000</code> and create the first account.</p>
+          </li>
+          <li>
+            <h3>4. Point a domain later</h3>
+            <p>A record to the host, forward 80/443, put Caddy in front. Certificates issue themselves.</p>
+          </li>
+        </ol>
+        <pre><span class="c"># clone and start</span>
+<span class="p">$</span> git clone https://github.com/Akicou/Nixre.git
+<span class="p">$</span> cd Nixre
+<span class="p">$</span> docker compose up -d
+
+<span class="c"># check it</span>
+<span class="p">$</span> curl -I http://localhost:3000
+<span class="ok">HTTP/1.1 200 OK</span></pre>
+      </div>
+    </section>
+
+    <section>
+      <div class="note">
+        <div class="section-head">
+          <h2>If an agent is installing this</h2>
+          <p>
+            Read <a href="/llms.txt">/llms.txt</a> first. It has the Caddyfile,
+            the DNS records, and the Sunrise / DS-Lite notes so you don’t have
+            to invent a deploy path.
+          </p>
+        </div>
+      </div>
+    </section>
   </div>
-</section>
+</main>
 
-<!-- ═══ DEPLOY ═══ -->
-<section class="section" id="deploy" style="border-top:1px solid var(--border)">
-  <div class="section-head rv">
-    <div class="section-label">Quick Start</div>
-    <h2>From zero to forge<br>in thirty seconds.</h2>
-    <p class="sub">Runs on a Raspberry Pi, a VPS, or your home server behind any ISP router. Zero dependencies beyond Docker.</p>
-  </div>
-
-  <div class="deploy-grid">
-    <div class="deploy-steps rv-l">
-      <div class="deploy-step">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>Clone the repository</h4>
-          <p>Grab the source from GitHub. <code>git clone</code> and you're halfway there.</p>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>Start the stack</h4>
-          <p>One command spins up the Go backend, SQLite database, and Caddy reverse proxy with automatic HTTPS.</p>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <h4>Point your domain</h4>
-          <p>Add an A record at your registrar, configure port forwarding on your router, and Caddy handles the rest — including SSL.</p>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>Register your passkey</h4>
-          <p>Head to Settings → Passkeys and enroll Touch ID, Face ID, or your YubiKey. Done.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="deploy-code rv-r">
-      <div class="dc-bar">terminal — zsh</div>
-      <div class="dc-body">
-        <span class="cm"># 1. Clone</span><br>
-        <span class="sh">$</span> <span class="cmd">git clone https://github.com/Akicou/Nixre.git</span><br>
-        <span class="sh">$</span> <span class="cmd">cd Nixre</span><br><br>
-        <span class="cm"># 2. Start</span><br>
-        <span class="sh">$</span> <span class="cmd">docker compose up -d</span><br><br>
-        <span class="cm"># 3. Verify</span><br>
-        <span class="sh">$</span> <span class="cmd">curl -I http://localhost:3000</span><br>
-        <span class="ok" style="color:var(--green)">HTTP/1.1 200 OK</span><br><br>
-        <span class="cm"># 4. Point your domain in Caddyfile</span><br>
-        <span class="key">git</span>.<span class="str">example</span>.<span class="str">com</span> {<br>
-        &nbsp;&nbsp;<span class="key">reverse_proxy</span> <span class="str">127.0.0.1:3001</span><br>
-        }<br><br>
-        <span class="sh">$</span> <span class="cmd">sudo systemctl restart caddy</span><br>
-        <span style="color:var(--green)">✓</span> <span class="cmd">Certificate issued. Forge is live.</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ CTA ═══ -->
-<section class="section cta-section" style="border-top:1px solid var(--border)">
-  <div class="rv">
-    <h2>Start building on<br><span style="background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">your own terms</span>.</h2>
-    <p class="sub">Free, open-source, self-hosted. No accounts required to explore. No strings attached.</p>
-    <div class="cta-actions">
-      <a href="https://git.nayhein.com" target="_blank" class="btn btn-primary" style="padding:15px 36px;font-size:15px">
-        Launch the Forge <span class="arr">→</span>
-      </a>
-      <a href="https://github.com/Akicou/Nixre" target="_blank" class="btn btn-ghost" style="padding:15px 36px;font-size:15px">
-        Star on GitHub
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ FOOTER ═══ -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="sigil">nx</div>
-      <span>nixre</span>
-    </div>
-    <div class="footer-links">
-      <a href="https://github.com/Akicou/Nixre" target="_blank">GitHub</a>
-      <a href="https://git.nayhein.com" target="_blank">Forge</a>
+  <div class="wrap foot">
+    <p>MIT. 2026.</p>
+    <nav>
+      <a href="https://github.com/Akicou/Nixre">Source</a>
+      <a href="https://git.nayhein.com">Live instance</a>
       <a href="/llms.txt">llms.txt</a>
-      <a href="https://nixre.dev">nixre.dev</a>
-    </div>
-    <div class="footer-copy">MIT © 2026</div>
+    </nav>
   </div>
 </footer>
 
-<script>
-// Nav scroll
-const nav=document.getElementById('nav');
-window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>50)},{passive:true});
-
-// Scroll reveal
-const obs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}
-  });
-},{threshold:.08,rootMargin:'0px 0px -60px 0px'});
-document.querySelectorAll('.rv,.rv-l,.rv-r,.rv-s').forEach(el=>obs.observe(el));
-</script>
 </body>
 </html>
