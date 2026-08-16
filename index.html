@@ -336,9 +336,13 @@ footer {
             opposite: one container, your disk, your domain.
           </p>
           <p>
-            The UI is a React app in front of a Gitness-compatible API.
-            Auth is password or WebAuthn. An admin toggle closes registration
-            so the instance stays invite-only.
+            The UI is a React app in front of a Gitness backend.
+            Auth is password (or a token). Registered passkeys can
+            re-confirm an already-open session on that device, but can't
+            start a fresh login on their own &mdash; Gitness has no WebAuthn
+            backend to verify against. An admin toggle hides the sign-up
+            page per browser; closing an instance to new accounts for real
+            is a server-side flag (<code class="inline">GITNESS_USER_SIGNUP_ENABLED=false</code>).
           </p>
           <p>
             A public instance runs at
@@ -366,15 +370,15 @@ footer {
         </div>
         <div>
           <dt>Pull requests</dt>
-          <dd>Branch compare, side-by-side diff, commit list, merge. The usual review loop.</dd>
+          <dd>Branch compare, unified diff per file, commit list, merge. The usual review loop.</dd>
         </div>
         <div>
           <dt>Passkeys</dt>
-          <dd>WebAuthn / FIDO2. Touch ID, Face ID, Windows Hello, or a hardware key. Password still works.</dd>
+          <dd>WebAuthn / FIDO2 as a device-local convenience &mdash; re-confirm a session with Touch ID, Face ID, Windows Hello, or a hardware key. Password (or token) is what actually starts a session.</dd>
         </div>
         <div>
-          <dt>Registration lock</dt>
-          <dd>An admin switch that returns 403 on signup. Use it when the forge should stay private.</dd>
+          <dt>Registration page toggle</dt>
+          <dd>Per-browser admin switch that hides the sign-up page. It doesn't block the API &mdash; use <code class="inline">GITNESS_USER_SIGNUP_ENABLED=false</code> on the server to actually close signups.</dd>
         </div>
         <div>
           <dt>Agent notes</dt>

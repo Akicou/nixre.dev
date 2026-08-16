@@ -1,0 +1,34 @@
+name: Sync llms.txt from Akicou/Nixre
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch canonical llms.txt
+        run: curl -fsSL -o llms.txt.new https://raw.githubusercontent.com/Akicou/Nixre/main/llms.txt
+
+      - name: Replace if changed
+        run: |
+          if ! diff -q llms.txt.new llms.txt > /dev/null 2>&1; then
+            mv llms.txt.new llms.txt
+            echo "changed=true" >> "$GITHUB_ENV"
+          else
+            rm llms.txt.new
+            echo "changed=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit and push
+        if: env.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add llms.txt
+          git commit -m "chore: sync llms.txt from Akicou/Nixre"
+          git push
