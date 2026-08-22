@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>nixre — a self-hosted Git forge</title>
-<meta name="description" content="Self-host a Git forge with passkeys, spaces, and pull requests. One Docker command. No vendor lock-in.">
+<meta name="description" content="Self-host a Git forge with passkeys, spaces, pull requests, and an AI assistant that works on your repos. One Docker command. No vendor lock-in.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23111110'/><text x='16' y='22' text-anchor='middle' font-family='Georgia' font-size='16' fill='%23eceae4'>n</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -314,10 +314,12 @@ footer {
   <div class="wrap">
     <section class="hero" style="border-top:0;padding-top:var(--s9)">
       <p class="kicker">Self-hosted Git</p>
-      <h1>A Git forge you run yourself. Passkeys, spaces, pull requests.</h1>
+      <h1>A Git forge you run yourself. Passkeys, pull requests, an AI agent on your code.</h1>
       <p class="lede">
-        Nixre is a small Git server with a readable UI. Clone over HTTPS,
-        review diffs, lock public signups. No vendor account.
+        Nixre is a small, complete Git server with a readable UI. Clone over
+        HTTPS or SSH, review diffs, and put an AI assistant on your
+        repositories &mdash; with your own API key, encrypted on your server.
+        No vendor account, no third-party forge underneath.
       </p>
       <div class="actions">
         <a class="btn btn-solid" href="https://git.nayhein.com">Open the live instance</a>
@@ -333,16 +335,17 @@ footer {
         <div class="prose">
           <p>
             Most hosted forges trade convenience for lock-in. Nixre is the
-            opposite: one container, your disk, your domain.
+            opposite: one compose file, your disk, your domain. The backend is
+            a small Node.js service over PostgreSQL; repositories are plain
+            bare Git repos on your disk, served over Smart HTTP and SSH by
+            Nixre itself. There is no third-party forge underneath.
           </p>
           <p>
-            The UI is a React app in front of a Gitness backend.
-            Auth is password (or a token). Registered passkeys can
-            re-confirm an already-open session on that device, but can't
-            start a fresh login on their own &mdash; Gitness has no WebAuthn
-            backend to verify against. An admin toggle hides the sign-up
-            page per browser; closing an instance to new accounts for real
-            is a server-side flag (<code class="inline">GITNESS_USER_SIGNUP_ENABLED=false</code>).
+            Auth is email + password sessions or personal access tokens.
+            Passkeys are first-class: register Touch ID, Face ID, Windows
+            Hello, or a hardware key and use it to start a fresh login.
+            Everything account-scoped &mdash; settings, chats, keys &mdash;
+            syncs across your devices through Nixre's own sync service.
           </p>
           <p>
             A public instance runs at
@@ -361,28 +364,32 @@ footer {
       </div>
       <dl class="defs">
         <div>
-          <dt>Git over HTTPS</dt>
-          <dd>Standard <code class="inline">git clone</code> and <code class="inline">git push</code>. Smart HTTP, automatic TLS when you put Caddy in front.</dd>
+          <dt>Git over HTTPS &amp; SSH</dt>
+          <dd>Standard <code class="inline">git clone</code> and <code class="inline">git push</code>. Smart HTTP from the core service, SSH from its own container. Automatic TLS when you put Caddy in front.</dd>
         </div>
         <div>
-          <dt>Spaces</dt>
-          <dd>Organizations that hold repositories and members. Roles go from owner down to viewer.</dd>
+          <dt>Spaces &amp; repos</dt>
+          <dd>Organizations that hold repositories and members, branches, and push webhooks. Plain bare repos on your disk.</dd>
         </div>
         <div>
           <dt>Pull requests</dt>
-          <dd>Branch compare, unified diff per file, commit list, merge. The usual review loop.</dd>
+          <dd>Branch compare, unified diff per file, merge. Plus an assistant panel that reads the actual diff and reviews it with you.</dd>
         </div>
         <div>
           <dt>Passkeys</dt>
-          <dd>WebAuthn / FIDO2 as a device-local convenience &mdash; re-confirm a session with Touch ID, Face ID, Windows Hello, or a hardware key. Password (or token) is what actually starts a session.</dd>
+          <dd>WebAuthn / FIDO2 as a real login method &mdash; Touch ID, Face ID, Windows Hello, or a hardware key starts a fresh session. Passwords and personal access tokens remain full fallbacks.</dd>
         </div>
         <div>
-          <dt>Registration page toggle</dt>
-          <dd>Per-browser admin switch that hides the sign-up page. It doesn't block the API &mdash; use <code class="inline">GITNESS_USER_SIGNUP_ENABLED=false</code> on the server to actually close signups.</dd>
+          <dt>AI assistant</dt>
+          <dd>Bring your own key (DeepSeek, OpenAI, Anthropic, Ollama, any OpenAI-compatible endpoint) &mdash; stored AES-256-GCM encrypted server-side, never sent to the browser. Ask / Plan / Agent / Debug modes; Agent runs sandboxed repo tools (read, search, list files, run commands in a disposable clone) gated by per-repo permissions. Long chats auto-compact so context survives.</dd>
+        </div>
+        <div>
+          <dt>Closing signups</dt>
+          <dd>An admin toggle hides the registration page per browser. To close the API too, block <code class="inline">POST /api/v1/register</code> at your reverse proxy.</dd>
         </div>
         <div>
           <dt>Agent notes</dt>
-          <dd>A machine-readable <a href="/llms.txt" style="color:var(--accent-ink)">llms.txt</a> covers deploy, DNS, Caddy, and home-router port forwarding.</dd>
+          <dd>A machine-readable <a href="/llms.txt" style="color:var(--accent-ink)">llms.txt</a> covers deploy, DNS, Caddy patterns, and home-router port forwarding.</dd>
         </div>
       </dl>
     </section>
@@ -400,11 +407,11 @@ footer {
           </li>
           <li>
             <h3>2. Start</h3>
-            <p><code class="inline">docker compose up -d</code> brings up the API and the UI.</p>
+            <p><code class="inline">docker compose up -d</code> brings up Postgres, the API, git SSH, and the UI. Migrations run automatically.</p>
           </li>
           <li>
             <h3>3. Open it</h3>
-            <p>Visit <code class="inline">http://localhost:3000</code> and create the first account.</p>
+            <p>Visit <code class="inline">http://localhost:3000</code>, register the first account, and add an AI provider if you want the assistant.</p>
           </li>
           <li>
             <h3>4. Point a domain later</h3>
