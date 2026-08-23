@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nixre — a self-hosted Git forge</title>
+<meta name="description" content="Self-host a Git forge with passkeys, spaces, pull requests, and an AI assistant that works on your repos. One Docker command. No vendor lock-in.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Tokens from Akicou/Nixre public/colors.css — dark theme */
+  --bg: #00060f;
+  --bg-raise: #0a1018;
+  --ink: #ffffff;
+  --ink-2: #b8babc;
+  --ink-3: #8f9296;
+  --rule: #1f242c;
+  --rule-strong: #29303a;
+  --accent: #165fcc;
+  --accent-hover: #1c77ff;
+  --accent-ink: #4d94ff;
+  --ok: #73d13d;
+
+  --sans: Inter, Booton, ui-sans-serif, system-ui, sans-serif;
+  --serif: Inter, Booton, ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+
+  --f0: 12px; --f1: 14px; --f2: 16px; --f3: 20px;
+  --f4: 24px; --f5: 30px; --f6: 40px;
+
+  --measure: 40rem;
+  --page: 68rem;
+  --r: 6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body {
+  font-family: var(--sans);
+  font-size: var(--f2);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+img { max-width: 100%; }
+
+.wrap {
+  width: min(var(--page), calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* ——— nav ——— */
+header {
+  border-bottom: 1px solid var(--rule);
+}
+.nav {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s5);
+  padding-block: var(--s4);
+}
+.wordmark {
+  font-family: var(--serif);
+  font-size: var(--f3);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.wordmark span { color: var(--ink-3); font-weight: 400; }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  list-style: none;
+  font-size: var(--f1);
+  color: var(--ink-2);
+}
+.nav-links a {
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.nav-links a:hover,
+.nav-links a:focus-visible {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  outline: none;
+}
+.nav-links .primary {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.nav-links .primary:hover { border-bottom-color: var(--ink); }
+
+/* ——— hero ——— */
+.hero {
+  padding-block: var(--s9) var(--s8);
+  max-width: var(--measure);
+}
+.kicker {
+  font-family: var(--mono);
+  font-size: var(--f0);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--s4);
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 5vw, var(--f6));
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--s5);
+}
+.lede {
+  font-size: var(--f3);
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin-bottom: var(--s6);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s4) var(--s5);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-family: var(--sans);
+  font-size: var(--f1);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: var(--r);
+  border: 1px solid transparent;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn-solid {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-solid:hover { background: var(--accent-hover); }
+.btn-text {
+  padding-inline: 0;
+  color: var(--ink-2);
+  border-radius: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.btn-text:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ——— sections ——— */
+section {
+  padding-block: var(--s8);
+  border-top: 1px solid var(--rule);
+}
+.section-head {
+  max-width: var(--measure);
+  margin-bottom: var(--s6);
+}
+.section-head h2 {
+  font-family: var(--serif);
+  font-size: var(--f5);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: var(--s3);
+}
+.section-head p {
+  color: var(--ink-2);
+  max-width: 36rem;
+}
+
+/* ——— split intro ——— */
+.cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s6);
+}
+@media (min-width: 800px) {
+  .cols-2 { grid-template-columns: 1fr 1fr; gap: var(--s8); }
+}
+.prose p + p { margin-top: var(--s4); }
+.prose p { color: var(--ink-2); max-width: 36rem; }
+.prose strong { color: var(--ink); font-weight: 500; }
+
+/* ——— feature list (not cards) ——— */
+.defs {
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.defs li {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s2);
+  padding-block: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+@media (min-width: 720px) {
+  .defs li {
+    grid-template-columns: 14rem 1fr;
+    gap: var(--s6);
+    align-items: baseline;
+  }
+}
+.defs dt {
+  font-weight: 500;
+  font-size: var(--f2);
+}
+.defs dd { color: var(--ink-2); }
+
+/* ——— code ——— */
+pre, code { font-family: var(--mono); }
+code.inline {
+  font-size: 0.9em;
+  color: var(--accent-ink);
+}
+pre {
+  background: var(--bg-raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  padding: var(--s5);
+  overflow-x: auto;
+  font-size: var(--f1);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+pre .c { color: var(--ink-3); }
+pre .p { color: var(--accent); }
+pre .ok { color: var(--ok); }
+
+.install {
+  display: grid;
+  gap: var(--s6);
+}
+@media (min-width: 880px) {
+  .install { grid-template-columns: 18rem 1fr; align-items: start; }
+}
+.steps { list-style: none; }
+.steps li { padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+.steps li:first-child { border-top: 1px solid var(--rule); }
+.steps h3 {
+  font-size: var(--f2);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.steps p { color: var(--ink-2); font-size: var(--f1); }
+
+/* ——— agent note ——— */
+.note {
+  max-width: var(--measure);
+}
+.note a {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+.note a:hover { color: var(--ink); }
+
+/* ——— footer ——— */
+footer {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--s6);
+  color: var(--ink-3);
+  font-size: var(--f1);
+}
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+.foot nav { display: flex; gap: var(--s5); }
+.foot a { text-decoration: none; color: var(--ink-2); }
+.foot a:hover { color: var(--ink); }
+
+@media (max-width: 560px) {
+  .wrap { width: min(var(--page), calc(100% - 32px)); }
+  .nav-links { gap: var(--s4); }
+  .hero { padding-block: var(--s8) var(--s7); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="wordmark" href="/">nixre <span>/ forge</span></a>
+    <ul class="nav-links">
+      <li><a href="https://github.com/Akicou/Nixre">Source</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+      <li><a class="primary" href="https://git.nayhein.com">Live instance</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero" style="border-top:0;padding-top:var(--s9)">
+      <p class="kicker">Self-hosted Git</p>
+      <h1>A Git forge you run yourself. Passkeys, pull requests, an AI agent on your code.</h1>
+      <p class="lede">
+        Nixre is a small, complete Git server with a readable UI. Clone over
+        HTTPS or SSH, review diffs, and put an AI assistant on your
+        repositories with your own API key, encrypted on your server. No
+        vendor account, no third-party forge underneath.
+      </p>
+      <div class="actions">
+        <a class="btn btn-solid" href="https://git.nayhein.com">Open the live instance</a>
+        <a class="btn btn-text" href="#install">Install it yourself</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="cols cols-2">
+        <div class="section-head" style="margin:0">
+          <h2>What it is</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Hosted forges trade convenience for lock-in. Nixre does the
+            opposite: one compose file, your disk, your domain. The backend is
+            a small Node.js service over PostgreSQL; repositories are plain
+            bare Git repos on your disk, served over Smart HTTP and SSH by
+            Nixre itself. No third-party forge underneath.
+          </p>
+          <p>
+            Auth is email + password sessions or personal access tokens.
+            Tokens double as the credential for git over HTTPS: when
+            <code class="inline">git</code> asks for a password, paste a token
+            from Settings &rarr; Access Tokens. Passkeys are first-class:
+            register Touch ID, Face ID, Windows Hello, or a hardware key and
+            use it to start a fresh login. Settings, chats, and keys are
+            account-scoped and sync across your devices through Nixre's own
+            sync service.
+          </p>
+          <p>
+            A public instance runs at
+            <strong>git.nayhein.com</strong>.
+            The source is at
+            <a href="https://github.com/Akicou/Nixre" style="color:var(--accent-ink)">github.com/Akicou/Nixre</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>What you get</h2>
+        <p>The parts people actually use. Nothing else is advertised.</p>
+      </div>
+      <dl class="defs">
+        <div>
+          <dt>Git over HTTPS &amp; SSH</dt>
+          <dd>Standard <code class="inline">git clone</code> and <code class="inline">git push</code>. Smart HTTP comes from the core service, SSH from its own container. Put Caddy in front and you get automatic TLS. For git auth, use a <strong>token as the password</strong> (Settings &rarr; Access Tokens), not your account password.</dd>
+        </div>
+        <div>
+          <dt>Spaces &amp; repos</dt>
+          <dd>Organizations hold repositories, members, branches, and push webhooks. Repos are plain and bare on your disk.</dd>
+        </div>
+        <div>
+          <dt>Pull requests</dt>
+          <dd>Branch compare, unified diff per file, merge. Plus an assistant panel that reads the actual diff and reviews it with you.</dd>
+        </div>
+        <div>
+          <dt>Passkeys</dt>
+          <dd>WebAuthn / FIDO2 is a real login method. Touch ID, Face ID, Windows Hello, or a hardware key starts a fresh session. Passwords and personal access tokens remain fallbacks.</dd>
+        </div>
+        <div>
+          <dt>AI assistant</dt>
+          <dd>Bring your own key (DeepSeek, OpenAI, Anthropic, Ollama, or any OpenAI-compatible endpoint), stored AES-256-GCM encrypted server-side and never sent to the browser. Modes are Ask, Plan, Agent, and Debug. Agent runs sandboxed repo tools (read, search, list files, run commands in a disposable clone) gated by per-repo permissions, and long chats auto-compact so context survives.</dd>
+        </div>
+        <div>
+          <dt>Closing signups</dt>
+          <dd>An admin toggle hides the registration page per browser. To close the API too, block <code class="inline">POST /api/v1/register</code> at your reverse proxy.</dd>
+        </div>
+        <div>
+          <dt>Agent notes</dt>
+          <dd>A machine-readable <a href="/llms.txt" style="color:var(--accent-ink)">llms.txt</a> covers deploy, DNS, Caddy patterns, and home-router port forwarding.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="install">
+      <div class="section-head">
+        <h2>Install</h2>
+        <p>Docker is the only dependency. Domain and TLS are optional on day one.</p>
+      </div>
+      <div class="install">
+        <ol class="steps">
+          <li>
+            <h3>1. Clone</h3>
+            <p>Get the repo onto the machine that will host it.</p>
+          </li>
+          <li>
+            <h3>2. Start</h3>
+            <p><code class="inline">docker compose up -d</code> brings up Postgres, the API, git SSH, and the UI. Migrations run automatically.</p>
+          </li>
+          <li>
+            <h3>3. Open it</h3>
+            <p>Visit <code class="inline">http://localhost:3000</code>, register the first account, mint an access token for git (Settings &rarr; Access Tokens), and add an AI provider if you want the assistant.</p>
+          </li>
+          <li>
+            <h3>4. Point a domain later</h3>
+            <p>A record to the host, forward 80/443, put Caddy in front. Certificates issue themselves.</p>
+          </li>
+        </ol>
+        <pre><span class="c"># clone and start</span>
+<span class="p">$</span> git clone https://github.com/Akicou/Nixre.git
+<span class="p">$</span> cd Nixre
+<span class="p">$</span> docker compose up -d
+
+<span class="c"># check it</span>
+<span class="p">$</span> curl -I http://localhost:3000
+<span class="ok">HTTP/1.1 200 OK</span></pre>
+      </div>
+    </section>
+
+    <section>
+      <div class="note">
+        <div class="section-head">
+          <h2>If an agent is installing this</h2>
+          <p>
+            Read <a href="/llms.txt">/llms.txt</a> first. It has the Caddyfile,
+            the DNS records, and the Sunrise / DS-Lite notes so you don’t have
+            to invent a deploy path.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p>MIT. 2026.</p>
+    <nav>
+      <a href="https://github.com/Akicou/Nixre">Source</a>
+      <a href="https://git.nayhein.com">Live instance</a>
+      <a href="/llms.txt">llms.txt</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
