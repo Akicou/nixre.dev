@@ -8,6 +8,10 @@ Static landing page for [Nixre](https://github.com/Akicou/Nixre), a self-hosted 
 
 Any static host works.
 
+## Promo video
+
+`media/nixre-promo.mp4` is generated, not edited by hand. To rebuild it after a big UI change, use the skill [Lyan/motion-promo-video](https://git.nixre.dev/Lyan/motion-promo-video) (start with its `references/nixre-video.md`). Screenshots in `img/` come from the same skill. The video's music is third-party; keep the credit in `media/CREDITS.md`.
+
 ## License
 
 MIT © 2026 Nixre Contributors, except the music in `media/nixre-promo.mp4`, which is third-party. See [media/CREDITS.md](media/CREDITS.md).
