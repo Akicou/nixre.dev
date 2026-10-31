@@ -1,28 +1,13 @@
 # nixre.dev
 
-Official website and landing page for [nixre.dev](https://nixre.dev).
+Static landing page for [Nixre](https://github.com/Akicou/Nixre), a self-hosted Git forge. Live at https://nixre.dev.
 
-Nixre is a self-hosted Git forge: a Node.js core over PostgreSQL, bare repos on your disk, Git over HTTPS and SSH, passkey login, pull requests, and an embedded multi-provider AI assistant with an agentic tool loop.
+- `index.html`: the page, no build step
+- `llms.txt`: install guide for agents, synced from the main repo
+- `img/`, `media/`: screenshots (sample data) and the promo video
 
----
-
-## AI agent friendly (llms.txt)
-
-The site serves an official [`llms.txt`](./llms.txt), synced from the [main repository](https://github.com/Akicou/Nixre). Agents can read `/llms.txt` to deploy Nixre, configure custom subdomains, set up Let's Encrypt SSL, and diagnose home-router port forwarding (including Sunrise Connect Box 3).
-
----
-
-## Deployment
-
-This is a zero-dependency static site you can throw on:
-
-- Cloudflare Pages
-- Vercel
-- GitHub Pages
-- Caddy / Nginx
-
----
+Any static host works.
 
 ## License
 
-MIT License © 2026 Nixre Contributors · [nixre.dev](https://nixre.dev)
+MIT © 2026 Nixre Contributors, except the music in `media/nixre-promo.mp4`, which is third-party. See [media/CREDITS.md](media/CREDITS.md).
