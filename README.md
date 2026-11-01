@@ -14,4 +14,4 @@ Any static host works.
 
 ## License
 
-MIT © 2026 Nixre Contributors, except the music in `media/nixre-promo.mp4`, which is third-party. See [media/CREDITS.md](media/CREDITS.md).
+MIT © 2026 Nixre Contributors, except the music in `media/nixre-promo.mp4` ("Double Rum Cola" by FATA BOOM), which is third-party. See [media/CREDITS.md](media/CREDITS.md).

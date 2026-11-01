@@ -2,9 +2,7 @@
 
 ## Music
 
-The soundtrack of `nixre-promo.mp4` is a clip of a third-party track. It was not created or owned by Nixre or its contributors, and it is not covered by this repository's MIT license. All rights remain with the original rights holders.
-
-Title and artist: not recorded in the source file. Add them here when known.
+The soundtrack of `nixre-promo.mp4` is a clip of **"Double Rum Cola" by FATA BOOM**. It was not created or owned by Nixre or its contributors, and it is not covered by this repository's MIT license. All rights remain with FATA BOOM and the original rights holders.
 
 If you are the rights holder and want the credit changed or the music removed, open an issue.
 
